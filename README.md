@@ -1,47 +1,5 @@
 # CongoDb Wexo Ai - Graph Database Cloud Benchmarking Suite
 
-
-A reproducible benchmark suite comparing CognoDB Cloud against managed graph database cloud platforms under strict, equivalent resource boundaries.  
- 
-
-This project evaluates graph engines on data ingestion throughput, multi-hop traversal latency, lookup performance, aggregations, and concurrent read/write scalability using a scale-free synthetic graph topology.  
- 
-
-Executive Summary & Key Findings
-Ingestion Efficiency: Memgraph Cloud demonstrated the fastest ingestion throughput, writing 133.95 relationships/sec (746.38s total). Neo4j AuraDB followed with 82.09 rels/sec (1,217.93s). CognoDB Cloud completed ingestion at 46.23 rels/sec (2,162.68s) under a small micro-batching configuration (100 records per transaction) required to respect 256 MB RAM limits.  
-
-Traversal Latency: Neo4j AuraDB achieved the lowest query latency across 1-hop (p 
-50
-​
- :51.23 ms, p 
-95
-​
- :62.67 ms) and 2-hop (p 
-50
-​
- :50.66 ms, p 
-95
-​
- :62.29 ms) queries. Memgraph Cloud averaged ∼157 ms (p 
-50
-​
- ). CognoDB Cloud recorded p 
-50
-​
-  latencies of ∼305–306 ms over cloud connections.  
- 
-
-Memory & Batch Behavior: Managed instances running with 256 MB RAM constraints require small transaction batches (100 items) to prevent buffer memory spikes, socket drops, and connection reset errors during heavy write cycles.  
- 
-
-Environment & Instance Specifications
-To guarantee tier parity, every platform was deployed on its entry/free tier or constrained to equivalent hardware limits.  
- 
-
-# CongoDb Wexo Ai
-
-## Graph Database Cloud Benchmarking Suite
-
 A reproducible benchmark suite comparing CognoDB Cloud with managed graph database platforms under equivalent, resource-constrained conditions.
 
 The project evaluates:
