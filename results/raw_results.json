@@ -1,0 +1,53 @@
+{
+    "CognoDB Cloud": {
+        "load": {
+            "wall_clock_sec": 2162.68,
+            "nodes_per_sec": 9.25,
+            "rels_per_sec": 46.23
+        },
+        "traversals": {
+            "1_hop": {
+                "p50_ms": 305.98,
+                "p95_ms": 367.19
+            },
+            "2_hop": {
+                "p50_ms": 306.69,
+                "p95_ms": 371.77
+            }
+        }
+    },
+    "Neo4j AuraDB": {
+        "load": {
+            "wall_clock_sec": 1217.93,
+            "nodes_per_sec": 16.42,
+            "rels_per_sec": 82.09
+        },
+        "traversals": {
+            "1_hop": {
+                "p50_ms": 51.23,
+                "p95_ms": 62.67
+            },
+            "2_hop": {
+                "p50_ms": 50.66,
+                "p95_ms": 62.29
+            }
+        }
+    },
+    "Memgraph Cloud": {
+        "load": {
+            "wall_clock_sec": 746.38,
+            "nodes_per_sec": 26.8,
+            "rels_per_sec": 133.95
+        },
+        "traversals": {
+            "1_hop": {
+                "p50_ms": 157.33,
+                "p95_ms": 161.46
+            },
+            "2_hop": {
+                "p50_ms": 157.85,
+                "p95_ms": 162.85
+            }
+        }
+    }
+}
