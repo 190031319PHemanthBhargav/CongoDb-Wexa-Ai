@@ -38,123 +38,146 @@ Environment & Instance Specifications
 To guarantee tier parity, every platform was deployed on its entry/free tier or constrained to equivalent hardware limits.  
  
 
-Platform	Deployment Type	vCPU Allocation	RAM Limit	Storage Limit	Query Interface
-CognoDB Cloud	Managed Cloud Free Instance	Burstable 0.5 vCPU	256 MB	1 GB	Cypher / Bolt
-Neo4j AuraDB	Managed Cloud Free Tier	0.5 vCPU Equivalent	256 MB	1 GB	Cypher / Bolt
-Memgraph Cloud	Managed Cloud Free Tier	0.5 vCPU Equivalent	256 MB	1 GB	Cypher / Bolt
-KùzuDB	In-Process Embedded Engine	Capped 0.5 vCPU	Restricted	Local Disk	Cypher / Native
-Dataset Details
-Source: Synthetic scale-free network generated via the Barabási–Albert model (n=20,000,m=5).  
- 
+# CongoDb Wexo Ai
 
-Topology: Scale-free network exhibiting power-law degree distribution, simulating real-world social networks and citation graphs.  
- 
+## Graph Database Cloud Benchmarking Suite
 
-Size: Exactly 20,000 User nodes and 100,000 directed FOLLOWS relationships.  
- 
+A reproducible benchmark suite comparing CognoDB Cloud with managed graph database platforms under equivalent, resource-constrained conditions.
 
-Ingestion Format: Standardized CSV input (nodes.csv, edges.csv) loaded in micro-batches of 100 records per Cypher transaction to maintain low memory overhead.  
- 
+The project evaluates:
 
-Results Matrix
-All latency metrics represent p 
-50
-​
-  and p 
-95
-​
-  percentiles calculated over ≥100 random start node iterations following a warm-up phase.  
- 
+- Data ingestion throughput
+- Multi-hop traversal latency
+- Point lookups and filtered lookups
+- Aggregation performance
+- Concurrent read/write scalability
 
-1. Data Ingestion Performance
-Platform	Wall-Clock Time (s)	Ingest Throughput (Nodes/sec)	Ingest Throughput (Rels/sec)
-Memgraph Cloud	746.38	26.80	133.95
-Neo4j AuraDB	1,217.93	16.42	82.09
-CognoDB Cloud	2,162.68	9.25	46.23
-2. Traversal Latencies
-Platform	1-Hop Traversal (p 
-50
-​
-  / p 
-95
-​
- )	2-Hop Traversal (p 
-50
-​
-  / p 
-95
-​
- )	3-Hop Traversal (p 
-50
-​
-  / p 
-95
-​
- )
-Neo4j AuraDB	51.23 ms / 62.67 ms	50.66 ms / 62.29 ms	58.12 ms / 71.40 ms
-Memgraph Cloud	157.33 ms / 161.46 ms	157.85 ms / 162.85 ms	164.10 ms / 172.50 ms
-CognoDB Cloud	305.98 ms / 367.19 ms	306.69 ms / 371.77 ms	321.40 ms / 389.20 ms
-3. Lookups & Aggregations
-Platform	Point Lookup (p 
-50
-​
-  / p 
-95
-​
- )	Filtered Lookup (p 
-50
-​
-  / p 
-95
-​
- )	Aggregation COUNT (p 
-50
-​
-  / p 
-95
-​
- )	Indexed Property
-Neo4j AuraDB	2.10 ms / 4.30 ms	4.80 ms / 8.20 ms	6.50 ms / 11.20 ms	User.id
-Memgraph Cloud	3.50 ms / 6.10 ms	7.20 ms / 12.40 ms	9.80 ms / 15.60 ms	User.id
-CognoDB Cloud	8.20 ms / 14.50 ms	12.10 ms / 21.30 ms	18.40 ms / 29.10 ms	User.id
-4. Mixed Concurrent Workload (80% Read / 20% Write)
-Platform	Throughput @ 1 Client	Throughput @ 10 Clients	Throughput @ 40 Clients
-Memgraph Cloud	112 QPS	480 QPS	620 QPS
-Neo4j AuraDB	145 QPS	510 QPS	590 QPS
-CognoDB Cloud	42 QPS	185 QPS	210 QPS
-Visualizations
-Traversal Latency Comparison
-Technical Analysis
-Transaction Overhead: Ingestion on entry-tier instances is limited by network protocol frame serialization and transaction commit cost. Micro-batching (100 records) prevented buffer overflow on 256 MB RAM limits but introduced noticeable wall-clock overhead.  
- 
+The benchmark uses a synthetic scale-free graph topology based on the Barabasi-Albert model.
 
-Query Processing & Cache: Neo4j AuraDB benefits from mature query plan caching on read operations. CognoDB Cloud demonstrated steady scaling across 1-hop and 2-hop depth, with higher latency attributable to geographical client-to-cloud round-trip transport.  
- 
+## Executive Summary
 
-Memory Limits: Memory footprint remains the primary constraining factor during graph construction. In-memory indexing prior to edge population is necessary to avoid O(N) scanning during MATCH queries.  
- 
+### Ingestion efficiency
 
-Caveats & Methodology Notes
-Network Variance: Client runner executed queries over a public WAN connection to cloud endpoints, introducing network latency into all absolute time metrics.  
- 
+Memgraph Cloud achieved the highest ingestion throughput at **133.95 relationships/sec** with a total ingestion time of **746.38 seconds**. Neo4j AuraDB followed at **82.09 relationships/sec** in **1,217.93 seconds**. CognoDB Cloud achieved **46.23 relationships/sec** in **2,162.68 seconds**.
 
-Free-Tier Limits: Compute tiers feature burstable CPU quotas (0.5 vCPU); sustained bulk imports trigger temporary CPU throttling across all managed providers.  
- 
+All cloud platforms used micro-batches of 100 records per transaction to stay within the 256 MB memory limit.
 
-FalkorDB Exclusion: FalkorDB Cloud experienced socket initialization timeouts during automated bulk ingestion and was excluded from final runs.  
- 
+### Traversal latency
 
-Reproducible Setup Instructions
-1. Installation
-Bash
+Neo4j AuraDB achieved the lowest traversal latency:
+
+- 1-hop: **51.23 ms p50 / 62.67 ms p95**
+- 2-hop: **50.66 ms p50 / 62.29 ms p95**
+
+Memgraph Cloud averaged approximately **157 ms p50**, while CognoDB Cloud recorded approximately **305-306 ms p50** over public cloud connections.
+
+### Memory and batch behavior
+
+The 256 MB memory limit made small transaction batches necessary. Batches of 100 records helped prevent buffer memory spikes, socket drops, timeouts, and connection resets during heavy write workloads.
+
+## Environment and Instance Specifications
+
+| Platform | Deployment type | CPU allocation | RAM limit | Storage limit | Query interface |
+| --- | --- | --- | --- | --- | --- |
+| CognoDB Cloud | Managed cloud free instance | Burstable 0.5 vCPU | 256 MB | 1 GB | Cypher / Bolt |
+| Neo4j AuraDB | Managed cloud free tier | 0.5 vCPU equivalent | 256 MB | 1 GB | Cypher / Bolt |
+| Memgraph Cloud | Managed cloud free tier | 0.5 vCPU equivalent | 256 MB | 1 GB | Cypher / Bolt |
+| KuzuDB | In-process embedded engine | Capped 0.5 vCPU | Restricted | Local disk | Cypher / Native |
+
+## Dataset Details
+
+- **Source:** Synthetic scale-free network generated with the Barabasi-Albert model, `n=20,000`, `m=5`
+- **Topology:** Power-law degree distribution simulating social and citation graphs
+- **Size:** 20,000 `User` nodes and 100,000 directed `FOLLOWS` relationships
+- **Input format:** Standardized CSV files in `datasets/data/`
+- **Ingestion:** Micro-batches of 100 records per Cypher transaction
+
+## Results
+
+Latency metrics are p50 and p95 percentiles calculated over at least 100 random start-node iterations after warm-up.
+
+### 1. Data ingestion performance
+
+| Platform | Wall-clock time (s) | Nodes/sec | Relationships/sec |
+| --- | ---: | ---: | ---: |
+| Memgraph Cloud | 746.38 | 26.80 | 133.95 |
+| Neo4j AuraDB | 1,217.93 | 16.42 | 82.09 |
+| CognoDB Cloud | 2,162.68 | 9.25 | 46.23 |
+
+### 2. Traversal latency
+
+| Platform | 1-hop (p50 / p95) | 2-hop (p50 / p95) | 3-hop (p50 / p95) |
+| --- | ---: | ---: | ---: |
+| Neo4j AuraDB | 51.23 / 62.67 ms | 50.66 / 62.29 ms | 58.12 / 71.40 ms |
+| Memgraph Cloud | 157.33 / 161.46 ms | 157.85 / 162.85 ms | 164.10 / 172.50 ms |
+| CognoDB Cloud | 305.98 / 367.19 ms | 306.69 / 371.77 ms | 321.40 / 389.20 ms |
+
+### 3. Lookups and aggregations
+
+| Platform | Point lookup (p50 / p95) | Filtered lookup (p50 / p95) | COUNT aggregation (p50 / p95) | Indexed property |
+| --- | ---: | ---: | ---: | --- |
+| Neo4j AuraDB | 2.10 / 4.30 ms | 4.80 / 8.20 ms | 6.50 / 11.20 ms | `User.id` |
+| Memgraph Cloud | 3.50 / 6.10 ms | 7.20 / 12.40 ms | 9.80 / 15.60 ms | `User.id` |
+| CognoDB Cloud | 8.20 / 14.50 ms | 12.10 / 21.30 ms | 18.40 / 29.10 ms | `User.id` |
+
+### 4. Mixed concurrent workload
+
+Workload composition: 80% reads and 20% writes.
+
+| Platform | Throughput at 1 client | Throughput at 10 clients | Throughput at 40 clients |
+| --- | ---: | ---: | ---: |
+| Memgraph Cloud | 112 QPS | 480 QPS | 620 QPS |
+| Neo4j AuraDB | 145 QPS | 510 QPS | 590 QPS |
+| CognoDB Cloud | 42 QPS | 185 QPS | 210 QPS |
+
+## Visualizations
+
+### 1-Hop Traversal Latency Comparison
+
+![1-hop traversal latency comparison](results/traversal_1hop.png)
+
+The chart compares p50 and p95 latency for 1-hop traversal queries across the evaluated cloud platforms.
+
+## Technical Analysis
+
+### Ingestion bottlenecks and micro-batching
+
+Memgraph Cloud achieved the highest ingestion rate, largely due to its in-memory-first execution model. Neo4j AuraDB and CognoDB Cloud incur additional transaction and logging overhead per commit.
+
+Under the 256 MB memory constraint, batches of 100 records were required to prevent buffer pool exhaustion. This shifted the bottleneck from raw storage performance toward network serialization, transaction commits, and driver round trips.
+
+### Read latency and query caching
+
+Neo4j AuraDB recorded the lowest read latency, benefiting from mature query planning and index lookup behavior. Memgraph Cloud averaged approximately 157 ms, while CognoDB Cloud averaged approximately 305-306 ms.
+
+CognoDB Cloud's higher latency is likely influenced by public WAN round trips and the limitations of a burstable 0.5 vCPU free-tier instance.
+
+### Memory and scaling behavior
+
+On restricted 256 MB instances, graph construction is heavily memory-bound. Creating an index on `User.id` before edge insertion is important because it avoids full graph scans during relationship creation. Without an appropriate index, edge insertion can approach `O(N)` lookup behavior and cause query timeouts.
+
+## Caveats and Methodology Notes
+
+- The client runner executed queries over a public WAN connection, so absolute latency includes network overhead.
+- Free-tier instances use burstable CPU quotas and may throttle sustained bulk imports.
+- FalkorDB Cloud experienced socket initialization failures during automated bulk ingestion and was excluded from the final comparison.
+- Results can vary with cloud region, network conditions, instance load, cache state, and provider-level throttling.
+
+## Reproducible Setup
+
+### 1. Install dependencies
+
+```bash
 git clone <your-repository-url>
 cd cognodb-benchmarks
 pip install -r requirements.txt
-2. Environment Variables
-Create a local .env file (do not commit to version control):  
- 
+```
 
-Code snippet
+### 2. Configure environment variables
+
+Create a local `.env` file and do not commit it to version control.
+
+```env
 COGNODB_URI=bolt+s://<instance-id>.databases.cognodb.cloud
 COGNODB_USER=cognodb
 COGNODB_PASSWORD=<your-cognodb-password>
@@ -163,70 +186,65 @@ NEO4J_URI=neo4j+s://<instance-id>.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=<your-neo4j-password>
 
-MEMGRAPH_URI=bolt://<instance-host>:7687
+MEMGRAPH_URI=bolt+ssc://<instance-host>:7687
 MEMGRAPH_USER=memgraph
 MEMGRAPH_PASSWORD=<your-memgraph-password>
-3. Execution Pipeline
-Bash
-# 1. Generate synthetic dataset (100,000 edges)
-python dataset/prepare_dataset.py
 
-# 2. Execute benchmark harness across all databases
+FALKORDB_HOST=<your-falkordb-host>
+FALKORDB_PORT=<your-falkordb-port>
+FALKORDB_USERNAME=<your-falkordb-username>
+FALKORDB_PASSWORD=<your-falkordb-password>
+```
+
+### 3. Run the benchmark
+
+```bash
+# Generate the synthetic dataset
+python datasets/prepare_dataset.py
+
+# Run the benchmark harness
 python run_benchmarks.py
 
-# 3. Generate visual latency plots
+# Generate the latency chart
 python results/generate_charts.py
+```
 
-# Analysis & Architectural Root Cause
+## Architectural Root Cause Analysis
 
-The performance variations observed across platforms stem from differences in architecture, query engine maturity, and cloud networking overhead.
+The performance differences stem from architecture, query-engine maturity, transaction behavior, and cloud networking overhead.
 
-## Ingestion Bottlenecks & Micro-Batching
-Memgraph Cloud achieved the highest ingestion rate at 133.95 rels/sec, primarily due to its in-memory-first execution model.
-Neo4j AuraDB achieved 82.09 rels/sec, while CognoDB Cloud achieved 46.23 rels/sec. Both incur additional transaction logging overhead per commit.
-Under the restricted 256 MB memory footprint, small micro-batches of 100 records per transaction were strictly required to prevent buffer pool exhaustion.
-As a result, the performance bottleneck shifted from raw disk/memory I/O toward network packet serialization and driver handshakes.
-Read Latencies & Query Caching
-Platform	1-Hop / 2-Hop Read Latency
-Neo4j AuraDB	~50 ms
-Memgraph Cloud	~157 ms
-CognoDB Cloud	~305–306 ms
+### Ingestion
 
-Neo4j AuraDB recorded the lowest read latencies, benefiting from query plan caching and mature index lookups.
+Memgraph Cloud's in-memory-first execution model produced the highest ingestion throughput. Neo4j AuraDB and CognoDB Cloud showed lower throughput because each micro-batch incurs transaction commit and logging overhead.
 
-Memgraph Cloud averaged approximately 157 ms, while CognoDB Cloud averaged approximately 305–306 ms.
+### Traversals
 
-The higher latency observed with CognoDB Cloud is largely attributable to client-to-cloud network round trips over the Bolt SSL connection, combined with the limitations of its free-tier burstable compute environment (0.5 vCPU).
+Neo4j AuraDB delivered the lowest traversal latency at approximately 50 ms. Memgraph Cloud averaged approximately 157 ms, and CognoDB Cloud averaged approximately 305-306 ms.
 
-## Memory & Scaling Behavior
+### Indexing
 
-On restricted instances with 256 MB RAM, database behavior becomes heavily memory-bound.
+An index on `User.id` is essential before inserting relationships. It prevents expensive full scans when matching source and target nodes.
 
-Creating explicit node indexes, particularly on User.id, before edge insertion proved essential. Without appropriate indexes, edge creation can degenerate into full graph scans with O(N) complexity, potentially causing connection timeouts during high-throughput workloads.
+## Conclusion
 
-# Conclusion
+This study compares managed graph database platforms under equivalent entry-tier constraints:
 
-This benchmarking study provides an empirical evaluation of managed graph database cloud platforms running under equivalent, resource-constrained entry tiers:
+- 0.5 vCPU
+- 256 MB RAM
+- 1 GB storage
 
-0.5 vCPU
-256 MB RAM
-1 GB storage
+Key findings:
 
-# The key findings are:
+- **Neo4j AuraDB** delivered the lowest read latency for multi-hop traversals.
+- **Memgraph Cloud** delivered the highest bulk-ingestion throughput.
+- **CognoDB Cloud** provided a zero-configuration, Cypher/Bolt-compatible option with predictable behavior when using small batches and appropriate indexes.
 
-- Neo4j AuraDB delivers the lowest read latency for multi-hop graph traversals, making it well-suited for latency-sensitive transactional read workloads.
-- Memgraph Cloud provides the highest bulk-write and ingestion throughput, demonstrating strong efficiency for write-heavy graph construction.
-- CognoDB Cloud provides an accessible, zero-configuration, Cypher/Bolt-compatible platform. Although its ingestion throughput and read latencies are affected by free-tier burstable compute limitations and WAN connection overhead, it demonstrates predictable operational stability when workloads use small transaction batches of 100 items and appropriate node indexing.
+## Production Recommendations
 
-# Production Recommendations
-
-## For production deployments across all evaluated platforms:
-
-- Scale beyond entry-level memory limits to reduce memory pressure and improve sustained workload performance.
-- Co-locate application clients and database instances within the same cloud region to minimize network round-trip latency.
-- Use appropriate node indexes before bulk edge insertion to avoid expensive full graph scans.
-- Adopt controlled micro-batching, particularly under memory-constrained environments, to prevent buffer pool exhaustion and connection instability.
-- Select the platform based on workload characteristics:
-- Choose Neo4j AuraDB for latency-sensitive read and traversal workloads.
-- Choose Memgraph Cloud for write-heavy graph ingestion workloads.
-- Consider CognoDB Cloud when accessibility, zero-configuration setup, and Cypher/Bolt compatibility are priorities.
+- Scale beyond entry-level memory limits for sustained workloads.
+- Co-locate application clients and databases in the same cloud region.
+- Create indexes before bulk edge insertion.
+- Use controlled micro-batching on memory-constrained instances.
+- Choose Neo4j AuraDB for latency-sensitive read workloads.
+- Choose Memgraph Cloud for write-heavy ingestion workloads.
+- Consider CognoDB Cloud when accessibility and Cypher/Bolt compatibility are priorities.
