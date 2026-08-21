@@ -1,6 +1,6 @@
-# CongoDb Wexo Ai
+# CongoDb Wexo Ai - Graph Database Cloud Benchmarking Suite
 
-Graph Database Cloud Benchmarking Suite
+
 A reproducible benchmark suite comparing CognoDB Cloud against managed graph database cloud platforms under strict, equivalent resource boundaries.  
  
 
